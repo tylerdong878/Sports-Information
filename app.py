@@ -1,12 +1,13 @@
+import os
 import datetime
 import time
 import json
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context, send_from_directory
 from nba_api.stats.endpoints import playergamelog
 from nba_api.stats.static import players
 import pandas as pd
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 def get_current_season():
     today = datetime.date.today()
@@ -34,7 +35,7 @@ def get_recent_stats(player_id, num_games, season):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return send_from_directory('static', 'index.html')
 
 @app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
@@ -128,5 +129,9 @@ def generate_analysis(num_games, points_threshold, rebounds_threshold, assists_t
     }
     yield f"data: {json.dumps(results)}\n\n"
 
+@app.route('/static/<path:path>')
+def send_static(path):
+    return send_from_directory('static', path)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

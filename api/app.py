@@ -1,12 +1,16 @@
 import datetime
 import time
 import json
+import os
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from nba_api.stats.endpoints import playergamelog
 from nba_api.stats.static import players
 import pandas as pd
 
-app = Flask(__name__)
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+template_dir = os.path.join(base_dir, 'templates')
+static_dir = os.path.join(base_dir, 'static')
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
 def get_current_season():
     today = datetime.date.today()

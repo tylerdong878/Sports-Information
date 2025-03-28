@@ -260,7 +260,7 @@
             
             doc.setFontSize(10);
             doc.text(`Report generated on ${dateStr}`, 105, 22, { align: 'center' });
-            doc.text(`Last ${gameCount} games | Points >= ${pointsThreshold} | Rebounds >= ${reboundsThreshold} | Assists >= ${assistsThreshold}`, 105, 27, { align: 'center' });
+            doc.text(`Last ${gameCount} games | Points ≥ ${pointsThreshold} | Rebounds ≥ ${reboundsThreshold} | Assists ≥ ${assistsThreshold}`, 105, 27, { align: 'center' });
             
             // Add divider
             doc.setLineWidth(0.5);
@@ -281,9 +281,7 @@
                         doc.addPage();
                         yPos = 15;
                     }
-                    // Sanitize player name to remove special characters that might cause display issues
-                    const sanitizedName = player.replace(/ć/g, 'c').replace(/č/g, 'c').replace(/ņ/g, 'n').replace(/ģ/g, 'g').replace(/ī/g, 'i').replace(/ž/g, 'z');
-                    doc.text(`${index + 1}. ${sanitizedName}`, 25, yPos);
+                    doc.text(`${index + 1}. ${player}`, 25, yPos);
                     yPos += 5;
                 });
             }
@@ -304,9 +302,7 @@
                         doc.addPage();
                         yPos = 15;
                     }
-                    // Sanitize player name to remove special characters that might cause display issues
-                    const sanitizedName = player.replace(/ć/g, 'c').replace(/č/g, 'c').replace(/ņ/g, 'n').replace(/ģ/g, 'g').replace(/ī/g, 'i').replace(/ž/g, 'z');
-                    doc.text(`${index + 1}. ${sanitizedName}`, 25, yPos);
+                    doc.text(`${index + 1}. ${player}`, 25, yPos);
                     yPos += 5;
                 });
             }
@@ -331,9 +327,7 @@
                         doc.addPage();
                         yPos = 15;
                     }
-                    // Sanitize player name to remove special characters that might cause display issues
-                    const sanitizedName = player.replace(/ć/g, 'c').replace(/č/g, 'c').replace(/ņ/g, 'n').replace(/ģ/g, 'g').replace(/ī/g, 'i').replace(/ž/g, 'z');
-                    doc.text(`${index + 1}. ${sanitizedName}`, 25, yPos);
+                    doc.text(`${index + 1}. ${player}`, 25, yPos);
                     yPos += 5;
                 });
             }

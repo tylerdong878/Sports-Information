@@ -415,27 +415,72 @@
         
         // PDF Generation
         document.getElementById('downloadPdf').addEventListener('click', function() {
+            // Make sure jsPDF is properly loaded
+            if (typeof window.jspdf === 'undefined') {
+                alert('PDF library not loaded properly. Please try again later.');
+                return;
+            }
+            
             const { jsPDF } = window.jspdf;
             
+            // Create a new PDF document
+            const pdf = new jsPDF('p', 'mm', 'a4');
             const resultsElement = document.getElementById('resultsContent');
             
-            // Create a clone of the results without the download button
-            const printElement = resultsElement.cloneNode(true);
+            // Display loading message
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'alert alert-info';
+            loadingMessage.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating PDF, please wait...';
+            loadingMessage.style.position = 'fixed';
+            loadingMessage.style.top = '20px';
+            loadingMessage.style.left = '50%';
+            loadingMessage.style.transform = 'translateX(-50%)';
+            loadingMessage.style.zIndex = '2000';
+            document.body.appendChild(loadingMessage);
             
-            // Create PDF
-            html2canvas(printElement).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                const imgWidth = canvas.width;
-                const imgHeight = canvas.height;
-                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-                const imgX = (pdfWidth - imgWidth * ratio) / 2;
-                
-                pdf.addImage(imgData, 'PNG', imgX, 10, imgWidth * ratio, imgHeight * ratio);
-                pdf.save('nba-consistency-analysis.pdf');
-            });
+            // Small delay to ensure the loading message is shown
+            setTimeout(function() {
+                // Use html2canvas to capture the results section
+                html2canvas(resultsElement, {
+                    scale: 1,
+                    useCORS: true,
+                    logging: false,
+                    allowTaint: true
+                }).then(canvas => {
+                    // Remove loading message
+                    document.body.removeChild(loadingMessage);
+                    
+                    // Convert the canvas to an image
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    // Add the title
+                    pdf.setFontSize(18);
+                    pdf.text('NBA Player Consistency Analysis', 105, 15, { align: 'center' });
+                    
+                    // Add current date
+                    pdf.setFontSize(10);
+                    pdf.text(`Report generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
+                    
+                    // Calculate dimensions to fit the page
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = canvas.width;
+                    const imgHeight = canvas.height;
+                    const ratio = Math.min(pdfWidth / imgWidth, (pdfHeight - 30) / imgHeight);
+                    const imgX = (pdfWidth - imgWidth * ratio) / 2;
+                    
+                    // Add the image to the PDF
+                    pdf.addImage(imgData, 'PNG', imgX, 30, imgWidth * ratio, imgHeight * ratio);
+                    
+                    // Save the PDF with a filename
+                    pdf.save('nba-consistency-analysis.pdf');
+                }).catch(error => {
+                    // Remove loading message
+                    document.body.removeChild(loadingMessage);
+                    console.error('Error generating PDF:', error);
+                    alert('There was an error generating the PDF. Please try again.');
+                });
+            }, 100);
         });
     </script>
 </body>

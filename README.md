@@ -2,23 +2,25 @@
 
 ## Overview
 
-This Python script analyzes NBA player performance using the `nba_api` library to identify consistent performers across three key statistical categories:
+This web application analyzes NBA player performance using the `nba_api` library. Users can dynamically set thresholds to identify consistent performers across three key statistical categories:
 
-1. **Scoring Consistency**: Players who score 15+ points in each of their last 5 games
-2. **Rebounding Consistency**: Players who grab 4+ rebounds in each of their last 5 games
-3. **Playmaking Consistency**: Players who dish out 4+ assists in each of their last 5 games
+1. **Scoring Consistency**: Players who score X+ points in each of their last Y games
+2. **Rebounding Consistency**: Players who grab X+ rebounds in each of their last Y games
+3. **Playmaking Consistency**: Players who dish out X+ assists in each of their last Y games
 
 ## Features
 
-- Dynamically determines the current NBA season
-- Analyzes performance across all active NBA players
-- Provides lists of players meeting specific consistency thresholds
-- Includes built-in rate limiting to respect API usage
+- Interactive web interface
+- Dynamically set game count and performance thresholds
+- Real-time analysis of NBA player statistics
+- No API key required
+- Responsive design
 
 ## Prerequisites
 
 - Python 3.7+
 - `nba_api` library
+- Flask
 - Internet connection
 
 ## Installation
@@ -29,32 +31,35 @@ This Python script analyzes NBA player performance using the `nba_api` library t
    cd Sports-Information
    ```
 
-2. Install required dependencies:
+2. Create a virtual environment (optional but recommended):
    ```bash
-   pip install nba_api
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Running the Application
+
+```bash
+python app.py
+```
+
+Open a web browser and navigate to `http://localhost:5000`
 
 ## Usage
 
-Run the script directly:
-```bash
-python nba_stats.py
-```
+1. Set the number of games to analyze
+2. Set thresholds for points, rebounds, and assists
+3. Click "Analyze Players" to see consistent performers
 
-The program will:
-- Fetch data about active NBA players
-- Analyze their performance in the current season
-- Display lists of players meeting consistency criteria
+## Contributing
 
-## Customization
+Contributions are welcome! Please submit a Pull Request.
 
-You can easily modify the script to adjust:
-- Number of games to analyze
-- Performance thresholds for points, rebounds, and assists
-- Season to analyze
+## License
 
-## Performance Notes
-
-- The script processes all active NBA players
-- Rate limiting is implemented to prevent API overload
-- Processing time depends on the number of active players
+[Specify your license here]

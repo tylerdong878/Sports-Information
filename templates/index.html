@@ -2,37 +2,137 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NBA Player Consistency Analyzer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <!-- PDF Generation Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { padding-top: 50px; }
-        .results { margin-top: 20px; }
-        #console {
-            background-color: #f8f9fa;
+        :root {
+            --nba-blue: #17408B;
+            --nba-red: #C9082A;
+            --nba-dark: #1D1E2C;
+            --nba-light: #F7F7F7;
+            --nba-accent: #FFD700;
+        }
+        
+        body { 
+            background-color: var(--nba-light); 
+            font-family: 'Roboto', sans-serif;
+            color: var(--nba-dark);
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        
+        .header-logo {
+            max-height: 60px;
+            margin-right: 15px;
+        }
+        
+        .main-header {
+            background: linear-gradient(135deg, var(--nba-blue), var(--nba-red));
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background-color: var(--nba-blue);
+            color: white;
+            font-weight: 600;
+            padding: 15px 20px;
+            border: none;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .btn-primary {
+            background-color: var(--nba-blue);
+            border-color: var(--nba-blue);
+            padding: 12px 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0d2e6a;
+            border-color: #0d2e6a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-success {
+            background-color: #28A745;
+            border-color: #28A745;
+            padding: 12px 20px;
+            font-weight: 600;
+        }
+        
+        .results { 
+            margin-top: 30px; 
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--nba-dark);
+        }
+        
+        .form-control {
+            border-radius: 8px;
+            padding: 12px;
             border: 1px solid #dee2e6;
-            border-radius: 5px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--nba-blue);
+            box-shadow: 0 0 0 0.25rem rgba(23, 64, 139, 0.25);
+        }
+        
+        #console {
+            background-color: var(--nba-dark);
+            border: none;
+            border-radius: 8px;
             padding: 15px;
-            font-family: monospace;
+            font-family: 'Roboto Mono', monospace;
             height: 300px;
             overflow-y: auto;
             white-space: pre-wrap;
             margin-top: 20px;
-            color: #212529;
+            color: #f8f9fa;
         }
+        
         .progress {
-            margin-top: 10px;
-            margin-bottom: 10px;
+            margin-top: 15px;
+            margin-bottom: 15px;
             height: 25px;
+            border-radius: 50px;
+            background-color: #e9ecef;
         }
+        
         .progress-bar {
             transition: width 0.1s ease;
+            background-color: var(--nba-red);
+            border-radius: 50px;
         }
+        
         .analysis-status {
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
+        
         .player-name {
             font-weight: bold;
             white-space: nowrap;
@@ -41,65 +141,150 @@
             max-width: 200px;
             display: inline-block;
         }
+        
         .console-line {
             margin-bottom: 5px;
         }
+        
+        .category-icon {
+            margin-right: 10px;
+            color: var(--nba-accent);
+        }
+        
+        .player-list-item {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            background-color: #f8f9fa;
+            transition: all 0.2s;
+        }
+        
+        .player-list-item:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .no-players {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .threshold-badge {
+            background-color: var(--nba-blue);
+            color: white;
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 50px;
+            margin-left: 10px;
+        }
+        
         /* Print specific styles */
         @media print {
-            body { padding-top: 0; }
-            button, .no-print { display: none !important; }
-            .card { border: 1px solid #ddd; margin-bottom: 20px; }
-            .card-header { background-color: #f8f9fa; padding: 10px; font-weight: bold; }
-            .card-body { padding: 15px; }
+            body { 
+                padding-top: 0;
+                background-color: white;
+            }
+            button, .no-print { 
+                display: none !important; 
+            }
+            .card { 
+                border: 1px solid #ddd; 
+                margin-bottom: 20px;
+                box-shadow: none;
+            }
+            .card-header { 
+                background-color: #f8f9fa !important; 
+                color: #212529 !important;
+                padding: 10px; 
+                font-weight: bold; 
+            }
+            .card-body { 
+                padding: 15px; 
+            }
+            .main-header {
+                background: none !important;
+                color: #212529 !important;
+                box-shadow: none;
+                padding: 0;
+                margin-bottom: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center mb-4">NBA Player Consistency Analyzer</h1>
+        <div class="main-header text-center">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <img src="https://cdn.nba.com/logos/nba/nba-logoman-75-word_white.svg" alt="NBA Logo" class="header-logo">
+                <h1 class="mb-0">Player Consistency Analyzer</h1>
+            </div>
+            <p class="lead mb-0">Find the NBA's most consistent performers based on your criteria</p>
+        </div>
         
         <div class="row">
             <div class="col-md-10 offset-md-1">
-                <form id="analyzeForm">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Number of Games</label>
-                                <input type="number" class="form-control" id="numGames" value="5" min="1" max="10">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Points Threshold</label>
-                                <input type="number" class="form-control" id="pointsThreshold" value="15" min="0">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Rebounds Threshold</label>
-                                <input type="number" class="form-control" id="reboundsThreshold" value="4" min="0">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Assists Threshold</label>
-                                <input type="number" class="form-control" id="assistsThreshold" value="4" min="0">
-                            </div>
-                        </div>
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-sliders"></i> Set Analysis Parameters
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">Analyze Players</button>
-                </form>
+                    <div class="card-body">
+                        <form id="analyzeForm">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="bi bi-calendar-check"></i> Number of Games
+                                        </label>
+                                        <input type="number" class="form-control" id="numGames" value="5" min="1" max="10">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="bi bi-bullseye"></i> Points Threshold
+                                        </label>
+                                        <input type="number" class="form-control" id="pointsThreshold" value="15" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="bi bi-arrow-down-circle"></i> Rebounds Threshold
+                                        </label>
+                                        <input type="number" class="form-control" id="reboundsThreshold" value="4" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="bi bi-hand-index-thumb"></i> Assists Threshold
+                                        </label>
+                                        <input type="number" class="form-control" id="assistsThreshold" value="4" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Analyze Players
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 
                 <div id="analysisProgress" style="display: none;">
-                    <div class="card mt-4">
-                        <div class="card-header">Analysis Progress</div>
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-activity"></i> Analysis Progress
+                        </div>
                         <div class="card-body">
                             <div id="statusMessages"></div>
                             
                             <div class="progress-status d-flex justify-content-between">
-                                <span id="currentPlayerInfo">Processing: <span class="player-name" id="playerName">Initializing...</span></span>
-                                <span id="progressCount">0/0 (0%)</span>
+                                <span id="currentPlayerInfo">
+                                    <i class="bi bi-person-badge"></i> Processing: 
+                                    <span class="player-name" id="playerName">Initializing...</span>
+                                </span>
+                                <span id="progressCount" class="badge bg-secondary">0/0 (0%)</span>
                             </div>
                             
                             <div class="progress">
@@ -119,18 +304,27 @@
                     </div>
                     
                     <div id="resultsContent">
-                        <div class="card mt-3">
-                            <div class="card-header">Results: Points Consistency</div>
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-bullseye category-icon"></i> Points Consistency
+                                <span id="pointsThresholdBadge" class="threshold-badge">15+ pts</span>
+                            </div>
                             <div class="card-body" id="pointsResults"></div>
                         </div>
                         
-                        <div class="card mt-3">
-                            <div class="card-header">Results: Rebounds Consistency</div>
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-arrow-down-circle category-icon"></i> Rebounds Consistency
+                                <span id="reboundsThresholdBadge" class="threshold-badge">4+ reb</span>
+                            </div>
                             <div class="card-body" id="reboundsResults"></div>
                         </div>
                         
-                        <div class="card mt-3">
-                            <div class="card-header">Results: Assists Consistency</div>
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-hand-index-thumb category-icon"></i> Assists Consistency
+                                <span id="assistsThresholdBadge" class="threshold-badge">4+ ast</span>
+                            </div>
                             <div class="card-body" id="assistsResults"></div>
                         </div>
                     </div>
@@ -150,12 +344,22 @@
             document.getElementById('statusMessages').innerHTML = '';
             document.getElementById('progressBar').style.width = '0%';
             
+            // Update threshold badges
+            const pointsThreshold = document.getElementById('pointsThreshold').value;
+            const reboundsThreshold = document.getElementById('reboundsThreshold').value;
+            const assistsThreshold = document.getElementById('assistsThreshold').value;
+            const numGames = document.getElementById('numGames').value;
+            
+            document.getElementById('pointsThresholdBadge').textContent = `${pointsThreshold}+ pts`;
+            document.getElementById('reboundsThresholdBadge').textContent = `${reboundsThreshold}+ reb`;
+            document.getElementById('assistsThresholdBadge').textContent = `${assistsThreshold}+ ast`;
+            
             // Collect form data
             const data = {
-                num_games: document.getElementById('numGames').value,
-                points_threshold: document.getElementById('pointsThreshold').value,
-                rebounds_threshold: document.getElementById('reboundsThreshold').value,
-                assists_threshold: document.getElementById('assistsThreshold').value
+                num_games: numGames,
+                points_threshold: pointsThreshold,
+                rebounds_threshold: reboundsThreshold,
+                assists_threshold: assistsThreshold
             };
             
             // Setup EventSource for Server-Sent Events
@@ -199,141 +403,84 @@
                     // Display each category
                     ['points', 'rebounds', 'assists'].forEach(category => {
                         const resultDiv = document.getElementById(`${category}Results`);
-                        const threshold = category === 'points' ? data.thresholds.points : 
-                                         (category === 'rebounds' ? data.thresholds.rebounds : data.thresholds.assists);
+                        const players = data[category];
                         
-                        resultDiv.innerHTML = `<h5>${data[category].length} players with ${threshold}+ ${category} in each of their last ${data.thresholds.games} games:</h5>`;
-                        
-                        if (data[category].length > 0) {
-                            const list = data[category].map((player, index) => 
-                                `<li>${player}</li>`
-                            ).join('');
-                            resultDiv.innerHTML += `<ol>${list}</ol>`;
+                        if (players.length === 0) {
+                            resultDiv.innerHTML = `<p class="no-players">No players met the ${category} threshold criteria.</p>`;
                         } else {
-                            resultDiv.innerHTML += 'No players found meeting this criteria';
+                            const playerList = document.createElement('ol');
+                            playerList.className = 'list-group list-group-flush';
+                            
+                            players.forEach(player => {
+                                const item = document.createElement('li');
+                                item.className = 'player-list-item';
+                                item.innerHTML = `<i class="bi bi-person"></i> ${player}`;
+                                playerList.appendChild(item);
+                            });
+                            
+                            resultDiv.innerHTML = '';
+                            resultDiv.appendChild(playerList);
                         }
                     });
                     
-                    // Add completion message to console
-                    consoleElement.innerHTML += '\nAnalysis complete!\n';
-                    consoleElement.scrollTop = consoleElement.scrollHeight;
+                    // Add summary at the top of results with threshold info
+                    const summaryText = `
+                        <div class="alert alert-info mb-4">
+                            <h5><i class="bi bi-info-circle"></i> Analysis Summary</h5>
+                            <p>Players who maintained consistency over their last ${data.thresholds.games} games:</p>
+                            <ul>
+                                <li><strong>Points:</strong> ${data.points.length} players with ${data.thresholds.points}+ points</li>
+                                <li><strong>Rebounds:</strong> ${data.rebounds.length} players with ${data.thresholds.rebounds}+ rebounds</li>
+                                <li><strong>Assists:</strong> ${data.assists.length} players with ${data.thresholds.assists}+ assists</li>
+                            </ul>
+                            <p class="mb-0"><small>Analysis completed on ${new Date().toLocaleString()}</small></p>
+                        </div>
+                    `;
+                    document.getElementById('resultsContent').insertAdjacentHTML('afterbegin', summaryText);
                 }
-                else {
+                else if (data.type === 'init' || data.type === 'season' || data.type === 'config' || data.type === 'players' || data.type === 'start') {
                     // Add status messages
-                    document.getElementById('statusMessages').innerHTML += 
-                        `<div class="analysis-status">${data.message}</div>`;
+                    const statusElement = document.getElementById('statusMessages');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'alert alert-info mb-2 py-2';
+                    messageDiv.innerHTML = `<i class="bi bi-info-circle"></i> ${data.message}`;
+                    statusElement.appendChild(messageDiv);
                     
-                    // Add to console
+                    // Also add to console
                     consoleElement.innerHTML += data.message + '\n';
                 }
-                
-                // Scroll console to bottom
-                consoleElement.scrollTop = consoleElement.scrollHeight;
             };
             
-            eventSource.onerror = function(event) {
-                console.error("EventSource error:", event);
-                document.getElementById('console').innerHTML += "Error: Connection lost. Please try again.\n";
+            eventSource.onerror = function() {
+                const consoleElement = document.getElementById('console');
+                consoleElement.innerHTML += 'Connection error. Please try again.\n';
                 eventSource.close();
             };
         });
         
-        // PDF Export functionality
+        // PDF Generation
         document.getElementById('downloadPdf').addEventListener('click', function() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
             
-            // Get current date
-            const now = new Date();
-            const dateStr = now.toLocaleDateString();
+            const resultsElement = document.getElementById('resultsContent');
             
-            // Define game count and thresholds for the report
-            const data = window.analysisData;
-            const gameCount = data.thresholds.games;
-            const pointsThreshold = data.thresholds.points;
-            const reboundsThreshold = data.thresholds.rebounds;
-            const assistsThreshold = data.thresholds.assists;
+            // Create a clone of the results without the download button
+            const printElement = resultsElement.cloneNode(true);
             
-            // Set up document
-            doc.setFontSize(18);
-            doc.text('NBA Player Consistency Analysis', 105, 15, { align: 'center' });
-            
-            doc.setFontSize(10);
-            doc.text(`Report generated on ${dateStr}`, 105, 22, { align: 'center' });
-            doc.text(`Last ${gameCount} games | Points ≥ ${pointsThreshold} | Rebounds ≥ ${reboundsThreshold} | Assists ≥ ${assistsThreshold}`, 105, 27, { align: 'center' });
-            
-            // Add divider
-            doc.setLineWidth(0.5);
-            doc.line(20, 30, 190, 30);
-            
-            // Add Points section
-            doc.setFontSize(14);
-            doc.text(`Players with ${pointsThreshold}+ points in each of their last ${gameCount} games:`, 20, 40);
-            
-            doc.setFontSize(10);
-            let yPos = 45;
-            if (data.points.length === 0) {
-                doc.text('No players found meeting this criteria', 25, yPos);
-                yPos += 5;
-            } else {
-                data.points.forEach((player, index) => {
-                    if (yPos > 280) {
-                        doc.addPage();
-                        yPos = 15;
-                    }
-                    doc.text(`${index + 1}. ${player}`, 25, yPos);
-                    yPos += 5;
-                });
-            }
-            
-            // Add Rebounds section
-            yPos += 5;
-            doc.setFontSize(14);
-            doc.text(`Players with ${reboundsThreshold}+ rebounds in each of their last ${gameCount} games:`, 20, yPos);
-            yPos += 5;
-            
-            doc.setFontSize(10);
-            if (data.rebounds.length === 0) {
-                doc.text('No players found meeting this criteria', 25, yPos);
-                yPos += 5;
-            } else {
-                data.rebounds.forEach((player, index) => {
-                    if (yPos > 280) {
-                        doc.addPage();
-                        yPos = 15;
-                    }
-                    doc.text(`${index + 1}. ${player}`, 25, yPos);
-                    yPos += 5;
-                });
-            }
-            
-            // Add Assists section
-            yPos += 5;
-            if (yPos > 260) {
-                doc.addPage();
-                yPos = 15;
-            }
-            
-            doc.setFontSize(14);
-            doc.text(`Players with ${assistsThreshold}+ assists in each of their last ${gameCount} games:`, 20, yPos);
-            yPos += 5;
-            
-            doc.setFontSize(10);
-            if (data.assists.length === 0) {
-                doc.text('No players found meeting this criteria', 25, yPos);
-            } else {
-                data.assists.forEach((player, index) => {
-                    if (yPos > 280) {
-                        doc.addPage();
-                        yPos = 15;
-                    }
-                    doc.text(`${index + 1}. ${player}`, 25, yPos);
-                    yPos += 5;
-                });
-            }
-            
-            // Save the PDF
-            doc.save('nba-player-consistency-analysis.pdf');
+            // Create PDF
+            html2canvas(printElement).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+                const imgX = (pdfWidth - imgWidth * ratio) / 2;
+                
+                pdf.addImage(imgData, 'PNG', imgX, 10, imgWidth * ratio, imgHeight * ratio);
+                pdf.save('nba-consistency-analysis.pdf');
+            });
         });
     </script>
 </body>

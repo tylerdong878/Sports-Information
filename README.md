@@ -1,41 +1,60 @@
-# Sports-Information
+# NBA Player Consistency Analyzer
 
-## NBA Player Consistency Analyzer
+## Overview
 
-This project analyzes NBA player performance using the balldontlie API to identify consistent performers across three key statistics:
+This Python script analyzes NBA player performance using the `nba_api` library to identify consistent performers across three key statistical categories:
 
-1. Players who score 15+ points in each of their last 5 games
-2. Players who grab 4+ rebounds in each of their last 5 games
-3. Players who dish out 4+ assists in each of their last 5 games
+1. **Scoring Consistency**: Players who score 15+ points in each of their last 5 games
+2. **Rebounding Consistency**: Players who grab 4+ rebounds in each of their last 5 games
+3. **Playmaking Consistency**: Players who dish out 4+ assists in each of their last 5 games
 
-### Setup and Installation
+## Features
 
-1. Make sure you have Python 3.7+ installed
-2. Install the required dependencies:
+- Dynamically determines the current NBA season
+- Analyzes performance across all active NBA players
+- Provides lists of players meeting specific consistency thresholds
+- Includes built-in rate limiting to respect API usage
+
+## Prerequisites
+
+- Python 3.7+
+- `nba_api` library
+- Internet connection
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/Sports-Information.git
+   cd Sports-Information
    ```
-   pip install -r requirements.txt
-   ```
-3. Set up your API key:
-   - Create a `.env` file in the project root (or edit the existing one):
-   ```
-   NBA_API_KEY=your_api_key_here
+
+2. Install required dependencies:
+   ```bash
+   pip install nba_api
    ```
 
-### Usage
+## Usage
 
-Simply run the script:
-```
+Run the script directly:
+```bash
 python nba_stats.py
 ```
 
 The program will:
-1. Fetch data about NBA players
-2. Analyze their last 5 games
-3. Display lists of players meeting each consistency criteria
+- Fetch data about active NBA players
+- Analyze their performance in the current season
+- Display lists of players meeting consistency criteria
 
-### Notes
+## Customization
 
-- The API has rate limits, so the script includes delays between requests
-- By default, analysis is limited to the first 50 players returned by the API to avoid long processing times
-- You can adjust this limit in the code by changing the `max_players` parameter in the `analyze_players` method
-- The `.env` file is included in `.gitignore` to prevent your API key from being committed to the repository
+You can easily modify the script to adjust:
+- Number of games to analyze
+- Performance thresholds for points, rebounds, and assists
+- Season to analyze
+
+## Performance Notes
+
+- The script processes all active NBA players
+- Rate limiting is implemented to prevent API overload
+- Processing time depends on the number of active players

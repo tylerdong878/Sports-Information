@@ -230,26 +230,157 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // PDF Generation
     document.getElementById('downloadPdf').addEventListener('click', function() {
-        const { jsPDF } = window.jspdf;
-        
-        const resultsElement = document.getElementById('resultsContent');
-        
-        // Create a clone of the results without the download button
-        const printElement = resultsElement.cloneNode(true);
-        
-        // Create PDF
-        html2canvas(printElement).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = canvas.width;
-            const imgHeight = canvas.height;
-            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-            const imgX = (pdfWidth - imgWidth * ratio) / 2;
+        try {
+            // Proper way to access jsPDF from the UMD module
+            const { jsPDF } = window.jspdf;
             
-            pdf.addImage(imgData, 'PNG', imgX, 10, imgWidth * ratio, imgHeight * ratio);
-            pdf.save('nba-consistency-analysis.pdf');
-        });
+            // Add a temporary loading message
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'alert alert-info text-center';
+            loadingMsg.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating PDF, please wait...';
+            document.body.appendChild(loadingMsg);
+            
+            // Create PDF document
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 15; // margin in mm
+            const usableWidth = pageWidth - (margin * 2);
+            
+            // Set font sizes
+            const titleSize = 18;
+            const headingSize = 14;
+            const normalSize = 12;
+            const smallSize = 10;
+            
+            // Helper function for text wrapping
+            function addWrappedText(text, x, y, maxWidth, fontSize, font = 'helvetica') {
+                pdf.setFont(font);
+                pdf.setFontSize(fontSize);
+                
+                const textLines = pdf.splitTextToSize(text, maxWidth);
+                pdf.text(textLines, x, y);
+                
+                return textLines.length;
+            }
+            
+            // Function to check if we need a new page
+            function checkForNewPage(currentY, neededSpace) {
+                if (currentY + neededSpace > pageHeight - margin) {
+                    pdf.addPage();
+                    return margin + 10; // Reset Y position with a bit of spacing
+                }
+                return currentY;
+            }
+            
+            // Start Y position
+            let yPos = margin + 10;
+            
+            // Add title
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(titleSize);
+            pdf.setTextColor(23, 64, 139); // NBA blue
+            pdf.text('NBA Player Consistency Analysis', pageWidth / 2, yPos, { align: 'center' });
+            yPos += 10;
+            
+            // Add timestamp
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(smallSize);
+            pdf.setTextColor(100, 100, 100);
+            const timestamp = `Generated on: ${new Date().toLocaleString()}`;
+            pdf.text(timestamp, pageWidth / 2, yPos, { align: 'center' });
+            yPos += 15;
+            
+            // Add analysis criteria if available
+            if (window.analysisData && window.analysisData.thresholds) {
+                yPos = checkForNewPage(yPos, 40);
+                
+                pdf.setDrawColor(200, 200, 200);
+                pdf.setFillColor(248, 249, 250);
+                pdf.roundedRect(margin, yPos - 5, usableWidth, 35, 3, 3, 'FD');
+                
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(headingSize);
+                pdf.setTextColor(0, 0, 0);
+                pdf.text('Analysis Criteria', margin + 5, yPos);
+                yPos += 7;
+                
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(normalSize);
+                pdf.text(`Games analyzed: ${window.analysisData.thresholds.games}`, margin + 5, yPos);
+                yPos += 6;
+                
+                pdf.text(`Points threshold: ${window.analysisData.thresholds.points}+`, margin + 5, yPos);
+                yPos += 6;
+                
+                pdf.text(`Rebounds threshold: ${window.analysisData.thresholds.rebounds}+`, margin + 5, yPos);
+                yPos += 6;
+                
+                pdf.text(`Assists threshold: ${window.analysisData.thresholds.assists}+`, margin + 5, yPos);
+                yPos += 15;
+            }
+            
+            // Add each category with players
+            ['points', 'rebounds', 'assists'].forEach(category => {
+                if (!window.analysisData || !window.analysisData[category]) return;
+                
+                const players = window.analysisData[category];
+                const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
+                const threshold = window.analysisData?.thresholds?.[category] || '';
+                
+                // Check if we need a new page for this category (heading + some items)
+                yPos = checkForNewPage(yPos, 30);
+                
+                // Add category heading
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(headingSize);
+                pdf.setTextColor(0, 0, 0);
+                pdf.text(`${categoryTitle} Consistency (${threshold}+)`, margin, yPos);
+                
+                // Draw underline
+                pdf.setDrawColor(200, 200, 200);
+                pdf.line(margin, yPos + 1, margin + usableWidth, yPos + 1);
+                yPos += 10;
+                
+                // Add players or "no players" message
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(normalSize);
+                
+                if (players.length === 0) {
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text(`No players met the ${category} threshold criteria.`, margin, yPos);
+                    yPos += 10;
+                } else {
+                    // Process players in batches to allow pagination
+                    for (let i = 0; i < players.length; i++) {
+                        // Check if we need a new page for this player
+                        yPos = checkForNewPage(yPos, 6);
+                        
+                        pdf.setTextColor(0, 0, 0);
+                        pdf.text(`${i+1}. ${players[i]}`, margin + 5, yPos);
+                        yPos += 6;
+                        
+                        // After every 30 players, add extra space
+                        if ((i + 1) % 30 === 0) {
+                            yPos += 3;
+                        }
+                    }
+                    yPos += 10; // Extra space after the list
+                }
+            });
+            
+            // Save the PDF
+            try {
+                pdf.save('nba-consistency-analysis.pdf');
+                document.body.removeChild(loadingMsg);
+            } catch (err) {
+                console.error('Error saving PDF:', err);
+                document.body.removeChild(loadingMsg);
+                alert('Error saving the PDF. Please try again or use a different browser.');
+            }
+        } catch (error) {
+            console.error('PDF initialization error:', error);
+            alert('Could not create PDF. Please ensure you\'re using a modern browser like Chrome or Edge.');
+        }
     });
 });

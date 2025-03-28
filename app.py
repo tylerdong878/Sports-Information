@@ -71,6 +71,7 @@ def generate_analysis(num_games, points_threshold, rebounds_threshold, assists_t
     points_list = []
     rebounds_list = []
     assists_list = []
+    player_ids_list = []  # New list to store player IDs
     
     # Process each player
     for i, player in enumerate(all_players):
@@ -103,12 +104,24 @@ def generate_analysis(num_games, points_threshold, rebounds_threshold, assists_t
         rebounds_check = all(row['REB'] >= rebounds_threshold for _, row in stats.iterrows())
         assists_check = all(row['AST'] >= assists_threshold for _, row in stats.iterrows())
         
+        # Add player to respective lists if they meet the criteria
         if points_check:
             points_list.append(name)
+            # Store player ID if not already in the list
+            if not any(p['id'] == pid for p in player_ids_list):
+                player_ids_list.append({'id': pid, 'name': name})
+                
         if rebounds_check:
             rebounds_list.append(name)
+            # Store player ID if not already in the list
+            if not any(p['id'] == pid for p in player_ids_list):
+                player_ids_list.append({'id': pid, 'name': name})
+                
         if assists_check:
             assists_list.append(name)
+            # Store player ID if not already in the list
+            if not any(p['id'] == pid for p in player_ids_list):
+                player_ids_list.append({'id': pid, 'name': name})
         
         # Respect rate limits - increased to 0.6 seconds to match nba_stats.py
         time.sleep(0.6)
@@ -119,6 +132,7 @@ def generate_analysis(num_games, points_threshold, rebounds_threshold, assists_t
         'points': points_list,
         'rebounds': rebounds_list,
         'assists': assists_list,
+        'player_ids': player_ids_list,
         'thresholds': {
             'games': num_games,
             'points': points_threshold,
@@ -127,6 +141,85 @@ def generate_analysis(num_games, points_threshold, rebounds_threshold, assists_t
         }
     }
     yield f"data: {json.dumps(results)}\n\n"
+
+@app.route('/player_stats/<player_id>')
+def player_stats(player_id):
+    try:
+        season = get_current_season()
+        # Get player name
+        player_data = next((p for p in players.get_active_players() if str(p['id']) == player_id), None)
+        if not player_data:
+            return jsonify({'error': 'Player not found'}), 404
+            
+        # Get last 5 games
+        log = playergamelog.PlayerGameLog(
+            player_id=player_id, 
+            season=season, 
+            season_type_all_star='Regular Season'
+        )
+        games_df = log.get_data_frames()[0].head(5)
+        
+        # Format the games data for JSON response
+        games_list = []
+        for _, game in games_df.iterrows():
+            game_date = game['GAME_DATE']
+            matchup = game['MATCHUP']
+            wl = game['WL']
+            mins = game['MIN']
+            pts = game['PTS']
+            fg_made = game['FGM']
+            fg_attempted = game['FGA']
+            fg_pct = round(game['FG_PCT'] * 100, 1) if game['FG_PCT'] is not None else 0.0
+            fg3_made = game['FG3M']
+            fg3_attempted = game['FG3A']
+            fg3_pct = round(game['FG3_PCT'] * 100, 1) if game['FG3_PCT'] is not None else 0.0
+            ft_made = game['FTM']
+            ft_attempted = game['FTA']
+            ft_pct = round(game['FT_PCT'] * 100, 1) if game['FT_PCT'] is not None else 0.0
+            oreb = game['OREB']
+            dreb = game['DREB']
+            reb = game['REB']
+            ast = game['AST']
+            stl = game['STL']
+            blk = game['BLK']
+            tov = game['TOV']
+            pf = game['PF']
+            plus_minus = game['PLUS_MINUS']
+            
+            games_list.append({
+                'game_date': game_date,
+                'matchup': matchup,
+                'wl': wl,
+                'min': mins,
+                'pts': pts,
+                'fgm': fg_made,
+                'fga': fg_attempted,
+                'fg_pct': fg_pct,
+                'fg3m': fg3_made,
+                'fg3a': fg3_attempted,
+                'fg3_pct': fg3_pct,
+                'ftm': ft_made,
+                'fta': ft_attempted,
+                'ft_pct': ft_pct,
+                'oreb': oreb,
+                'dreb': dreb,
+                'reb': reb,
+                'ast': ast,
+                'stl': stl,
+                'blk': blk,
+                'tov': tov,
+                'pf': pf,
+                'plus_minus': plus_minus
+            })
+            
+        return jsonify({
+            'player_id': player_id,
+            'player_name': player_data['full_name'],
+            'games': games_list
+        })
+    except Exception as e:
+        print(f"Error fetching player stats: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

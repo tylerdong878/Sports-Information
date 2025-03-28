@@ -157,11 +157,18 @@
             margin-bottom: 5px;
             background-color: #f8f9fa;
             transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
         }
         
         .player-list-item:hover {
             background-color: #e9ecef;
             transform: translateX(5px);
+        }
+        
+        .player-list-item i {
+            margin-right: 10px;
         }
         
         .no-players {
@@ -176,6 +183,99 @@
             padding: 5px 10px;
             border-radius: 50px;
             margin-left: 10px;
+        }
+        
+        /* Modal styles */
+        .stats-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(3px);
+        }
+        
+        .stats-modal-content {
+            background-color: var(--nba-light);
+            margin: 50px auto;
+            width: 90%;
+            max-width: 1000px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: modalFadeIn 0.3s;
+        }
+        
+        @keyframes modalFadeIn {
+            from {opacity: 0; transform: translateY(-50px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        
+        .stats-modal-header {
+            background: linear-gradient(135deg, var(--nba-blue), var(--nba-red));
+            color: white;
+            padding: 15px 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-modal-close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .stats-modal-body {
+            padding: 20px;
+        }
+        
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .stats-table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid var(--nba-blue);
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .stats-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .stats-table tr:hover td {
+            background-color: #f1f1f1;
+        }
+        
+        .cell-highlighted {
+            background-color: rgba(255, 215, 0, 0.2);
+            font-weight: 600;
+        }
+        
+        .wl-w {
+            color: green;
+            font-weight: bold;
+        }
+        
+        .wl-l {
+            color: var(--nba-red);
+            font-weight: bold;
+        }
+        
+        .stats-table-responsive {
+            overflow-x: auto;
         }
         
         /* Print specific styles */
@@ -215,7 +315,7 @@
     <div class="container">
         <div class="main-header text-center">
             <div class="d-flex align-items-center justify-content-center mb-2">
-                <img src="https://cdn.nba.com/logos/nba/nba-logoman-75-word_white.svg" alt="NBA Logo" class="header-logo">
+                <i class="bi bi-dribbble text-white" style="font-size: 3.5rem; margin-right: 15px;"></i>
                 <h1 class="mb-0">Player Consistency Analyzer</h1>
             </div>
             <p class="lead mb-0">Find the NBA's most consistent performers based on your criteria</p>
@@ -332,6 +432,57 @@
             </div>
         </div>
     </div>
+    
+    <!-- Player Stats Modal -->
+    <div id="playerStatsModal" class="stats-modal">
+        <div class="stats-modal-content">
+            <div class="stats-modal-header">
+                <h3 id="modalPlayerName">Player Stats</h3>
+                <span class="stats-modal-close">&times;</span>
+            </div>
+            <div class="stats-modal-body">
+                <div class="text-center mb-3">
+                    <h5>LAST 5 GAMES</h5>
+                </div>
+                <div class="stats-table-responsive">
+                    <table class="stats-table" id="playerStatsTable">
+                        <thead>
+                            <tr>
+                                <th>GAME DATE</th>
+                                <th>MATCHUP</th>
+                                <th>W/L</th>
+                                <th>MIN</th>
+                                <th>PTS</th>
+                                <th>FGM</th>
+                                <th>FGA</th>
+                                <th>FG%</th>
+                                <th>3PM</th>
+                                <th>3PA</th>
+                                <th>3P%</th>
+                                <th>FTM</th>
+                                <th>FTA</th>
+                                <th>FT%</th>
+                                <th>OREB</th>
+                                <th>DREB</th>
+                                <th>REB</th>
+                                <th>AST</th>
+                                <th>STL</th>
+                                <th>BLK</th>
+                                <th>TOV</th>
+                                <th>PF</th>
+                                <th>+/-</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTableBody">
+                            <tr>
+                                <td colspan="23" class="text-center">Loading player stats...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.getElementById('analyzeForm').addEventListener('submit', function(e) {
@@ -410,11 +561,29 @@
                         } else {
                             const playerList = document.createElement('ol');
                             playerList.className = 'list-group list-group-flush';
+                            playerList.style.paddingLeft = '30px';  // Add left padding for numbers
+                            
+                            // Get player IDs for each name
+                            const playerIds = {};
+                            data.player_ids.forEach(playerInfo => {
+                                playerIds[playerInfo.name] = playerInfo.id;
+                            });
                             
                             players.forEach(player => {
                                 const item = document.createElement('li');
                                 item.className = 'player-list-item';
                                 item.innerHTML = `<i class="bi bi-person"></i> ${player}`;
+                                
+                                // Add data attribute for player ID if available
+                                if (playerIds[player]) {
+                                    item.dataset.playerId = playerIds[player];
+                                    
+                                    // Add click event listener
+                                    item.addEventListener('click', function() {
+                                        showPlayerStats(playerIds[player], player);
+                                    });
+                                }
+                                
                                 playerList.appendChild(item);
                             });
                             
@@ -456,6 +625,91 @@
                 consoleElement.innerHTML += 'Connection error. Please try again.\n';
                 eventSource.close();
             };
+        });
+        
+        // Player Stats Modal Functions
+        function showPlayerStats(playerId, playerName) {
+            document.getElementById('modalPlayerName').textContent = playerName;
+            document.getElementById('statsTableBody').innerHTML = '<tr><td colspan="23" class="text-center">Loading player stats...</td></tr>';
+            document.getElementById('playerStatsModal').style.display = 'block';
+            
+            // Fetch player stats
+            fetch(`/player_stats/${playerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('statsTableBody').innerHTML = 
+                            `<tr><td colspan="23" class="text-center text-danger">Error: ${data.error}</td></tr>`;
+                        return;
+                    }
+                    
+                    // Clear table body
+                    const tableBody = document.getElementById('statsTableBody');
+                    tableBody.innerHTML = '';
+                    
+                    // Add game rows
+                    data.games.forEach(game => {
+                        const row = document.createElement('tr');
+                        
+                        // Format date (assuming format like "YYYY-MM-DD")
+                        const dateObj = new Date(game.game_date);
+                        const formattedDate = dateObj.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                        
+                        // Create cells
+                        row.innerHTML = `
+                            <td>${formattedDate}</td>
+                            <td>${game.matchup}</td>
+                            <td class="wl-${game.wl.toLowerCase()}">${game.wl}</td>
+                            <td>${game.min}</td>
+                            <td>${game.pts}</td>
+                            <td>${game.fgm}</td>
+                            <td>${game.fga}</td>
+                            <td>${game.fg_pct.toFixed(1)}</td>
+                            <td>${game.fg3m}</td>
+                            <td>${game.fg3a}</td>
+                            <td>${game.fg3_pct.toFixed(1)}</td>
+                            <td>${game.ftm}</td>
+                            <td>${game.fta}</td>
+                            <td>${game.ft_pct.toFixed(1)}</td>
+                            <td>${game.oreb}</td>
+                            <td>${game.dreb}</td>
+                            <td>${game.reb}</td>
+                            <td>${game.ast}</td>
+                            <td>${game.stl}</td>
+                            <td>${game.blk}</td>
+                            <td>${game.tov}</td>
+                            <td>${game.pf}</td>
+                            <td>${game.plus_minus}</td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
+                    
+                    if (data.games.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="23" class="text-center">No game data available</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('statsTableBody').innerHTML = 
+                        `<tr><td colspan="23" class="text-center text-danger">Error fetching data: ${error}</td></tr>`;
+                });
+        }
+        
+        // Close modal when clicking the X
+        document.querySelector('.stats-modal-close').addEventListener('click', function() {
+            document.getElementById('playerStatsModal').style.display = 'none';
+        });
+        
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('playerStatsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
         });
         
         // PDF Generation

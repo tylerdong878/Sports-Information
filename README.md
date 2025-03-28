@@ -55,11 +55,3 @@ Open a web browser and navigate to `http://localhost:5000`
 1. Set the number of games to analyze
 2. Set thresholds for points, rebounds, and assists
 3. Click "Analyze Players" to see consistent performers
-
-## Contributing
-
-Contributions are welcome! Please submit a Pull Request.
-
-## License
-
-[Specify your license here]

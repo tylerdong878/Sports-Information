@@ -1,5 +1,5 @@
 flask==2.3.2
 nba_api==1.2.1
 pandas==2.0.1
-gunicorn==20.1.0
+gunicorn==23.0.0
 requests==2.31.0

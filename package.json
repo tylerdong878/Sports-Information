@@ -1,0 +1,13 @@
+{
+  "name": "nba-player-consistency-analyzer",
+  "version": "1.0.0",
+  "description": "NBA Player Consistency Analyzer",
+  "main": "index.js",
+  "scripts": {
+    "build": "pip install -r requirements.txt"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "serverless-http": "^2.7.0"
+  }
+}

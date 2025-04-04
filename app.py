@@ -8,7 +8,7 @@ import pandas as pd
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://sports-information.vercel.app"}})
+CORS(app, resources={r"/*": {"origins": ["https://sports-information.vercel.app", "https://cdn.nba.com/static/json/liveData/"]}})
 
 def get_current_season():
     today = datetime.date.today()
@@ -126,7 +126,6 @@ def generate_analysis(num_games, points_threshold, rebounds_threshold, assists_t
                 player_ids_list.append({'id': pid, 'name': name})
         
         # Respect rate limits - increased to 0.6 seconds to match nba_stats.py
-        time.sleep(0.6)
     
     # Send results
     results = {

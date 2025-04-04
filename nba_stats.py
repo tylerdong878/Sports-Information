@@ -82,7 +82,6 @@ for i, player in enumerate(all_players):
         assists_list.append(name)
 
     # Respect rate limits of the NBA API
-    time.sleep(0.6)
 
 # Clear the progress line
 print(" " * 100, end="\r")

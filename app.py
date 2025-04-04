@@ -5,8 +5,10 @@ from flask import Flask, render_template, request, jsonify, Response, stream_wit
 from nba_api.stats.endpoints import playergamelog
 from nba_api.stats.static import players
 import pandas as pd
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "https://sports-information.vercel.app"}})
 
 def get_current_season():
     today = datetime.date.today()

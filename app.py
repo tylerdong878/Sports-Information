@@ -102,6 +102,8 @@ def generate_analysis(num_games, points_threshold, rebounds_threshold, assists_t
         if stats is None or len(stats) < num_games:
             continue
         
+        time.sleep(0.6)  # Added time delay
+        
         points_check = all(row['PTS'] >= points_threshold for _, row in stats.iterrows())
         rebounds_check = all(row['REB'] >= rebounds_threshold for _, row in stats.iterrows())
         assists_check = all(row['AST'] >= assists_threshold for _, row in stats.iterrows())
